@@ -132,7 +132,6 @@
         .ingredient-icon { font-size: 45px; margin-bottom: 5px; pointer-events: none; }
         .ingredient-name { pointer-events: none; }
         
-        /* Jakmile je surovina správně vložena, zmenší se, aby nedělala bordel */
         .ingredient.correct-placed {
             width: 85px;
             height: 90px;
@@ -189,10 +188,48 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             animation: popIn 0.3s ease;
         }
-        .modal-icon { font-size: 70px; margin-bottom: 10px; color: #f39c12; }
+        .modal-icon { 
+            font-size: 70px; 
+            margin-bottom: 10px; 
+            color: #f39c12; 
+            cursor: pointer; /* Ikona je nyní klikatelná */
+            transition: transform 0.2s;
+        }
+        .modal-icon:active { transform: scale(0.9); }
         .modal h2 { color: #2c3e50; margin-bottom: 15px; }
         .modal p { font-size: 22px; color: #34495e; margin-bottom: 10px; }
-        .modal .tip { font-size: 20px; color: #7f8c8d; font-style: italic; margin-bottom: 30px; }
+        
+        /* Skrytý text odpovědi */
+        .tip { 
+            font-size: 22px; 
+            color: #2980b9; 
+            font-weight: bold; 
+            margin-top: 20px;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .tip.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Tlačítko pro zobrazení odpovědi */
+        .reveal-btn {
+            background-color: #f39c12;
+            color: white;
+            font-size: 20px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .reveal-btn:active { transform: scale(0.98); }
 
         @keyframes popIn {
             from { transform: scale(0.8); opacity: 0; }
@@ -240,10 +277,16 @@
     <!-- MODÁLNÍ OKNO: Otázka po dokončení -->
     <div id="completion-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-icon">❓</div>
+            <div class="modal-icon" onclick="revealAnswer()">❓</div>
             <h2>Pokrm je hotový!</h2>
             <p>Co dalšího můžeme do pokrmu přidat?</p>
+            
+            <!-- Tlačítko, které po kliknutí zmizí a ukáže odpověď -->
+            <button id="reveal-btn" class="reveal-btn" onclick="revealAnswer()">Zobrazit odpověď</button>
+            
+            <!-- Skrytá odpověď, která se objeví po kliknutí -->
             <p class="tip" id="extra-tip-text">Tip sem...</p>
+            
             <button class="menu-btn btn-back" onclick="closeModal()" style="background-color: #3498db; color: white;">Hrát znovu</button>
         </div>
     </div>
@@ -412,7 +455,7 @@
             });
         }
 
-        // FUNKCE PRO TAŽENÍ (Opraveno zasekávání)
+        // FUNKCE PRO TAŽENÍ
         function startDrag(e) {
             if (e.currentTarget.classList.contains('correct-placed')) return;
             if (activeDrag) return; // Zabrání uchopení dvou prvků najednou
@@ -421,12 +464,10 @@
             originalParent = activeDrag.parentNode;
             originalNextSibling = activeDrag.nextSibling;
 
-            // Uložíme si přesnou pozici, kdyby se musela surovina vrátit
             startRect = activeDrag.getBoundingClientRect();
             offsetX = e.clientX - startRect.left;
             offsetY = e.clientY - startRect.top;
 
-            // Přesuneme do body a nastavíme fixní pozici
             document.body.appendChild(activeDrag);
             activeDrag.style.position = 'fixed';
             activeDrag.style.left = startRect.left + 'px';
@@ -442,12 +483,11 @@
 
         function moveDrag(e) {
             if (!activeDrag) return;
-            e.preventDefault(); // Zabrání scrollování
+            e.preventDefault(); 
             
             activeDrag.style.left = (e.clientX - offsetX) + 'px';
             activeDrag.style.top = (e.clientY - offsetY) + 'px';
             
-            // Vizuální zvýraznění hrnce/talíře
             const dropZone = document.getElementById('drop-zone');
             const dropRect = dropZone.getBoundingClientRect();
             const isInside = e.clientX >= dropRect.left && e.clientX <= dropRect.right && e.clientY >= dropRect.top && e.clientY <= dropRect.bottom;
@@ -468,10 +508,9 @@
             );
 
             let isCorrect = activeDrag.getAttribute("data-correct") === "true";
-            const draggedElement = activeDrag; // Uložíme do nové proměnné pro setTimeout
+            const draggedElement = activeDrag;
 
             if (isInsideDropZone && isCorrect) {
-                // SPRÁVNĚ: Umístíme do dropzone
                 dropZone.appendChild(draggedElement);
                 draggedElement.classList.remove('dragging');
                 draggedElement.classList.add('correct-placed');
@@ -489,10 +528,9 @@
 
                 if (correctItemsPlaced === totalCorrectItems) {
                     messageEl.innerText = "Skvělá práce! Pokrm je hotový!";
-                    setTimeout(showCompletionModal, 600); // Zpoždění, aby si uživatel stihl přečíst zprávu
+                    setTimeout(showCompletionModal, 600);
                 }
             } else {
-                // ŠPATNĚ NEBO MIMO: Plynule vrátíme na původní místo
                 messageEl.style.color = "#e74c3c";
                 if (isInsideDropZone) {
                     messageEl.innerText = "Pozor, toto do jídla nepatří.";
@@ -500,14 +538,11 @@
                     messageEl.innerText = "Netrefil jsi talíř, zkus to znovu.";
                 }
 
-                // Animace návratu zpět na výchozí souřadnice
                 draggedElement.style.transition = 'left 0.25s ease, top 0.25s ease';
-                // Vynutíme reflow, aby prohlížeč zaznamenal počáteční bod animace
                 draggedElement.offsetHeight; 
                 draggedElement.style.left = startRect.left + 'px';
                 draggedElement.style.top = startRect.top + 'px';
 
-                // Po dokončení animace vrátíme do DOMu a vyčistíme styly
                 setTimeout(() => {
                     if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
                         originalParent.insertBefore(draggedElement, originalNextSibling);
@@ -526,7 +561,6 @@
                 }, 250);
             }
 
-            // Úklid
             document.removeEventListener('pointermove', moveDrag);
             document.removeEventListener('pointerup', endDrag);
             activeDrag = null;
@@ -534,8 +568,27 @@
 
         // MODÁLNÍ OKNO S OTÁZKOU
         function showCompletionModal() {
+            // Vyčistíme předchozí stav (skryjeme odpověď, ukážeme tlačítko)
+            document.getElementById('extra-tip-text').classList.remove('visible');
+            document.getElementById('reveal-btn').style.display = 'inline-block';
+            
+            // Nastavíme text odpovědi do HTML
             document.getElementById('extra-tip-text').innerText = currentLevelInfo.extraTip;
+            
+            // Zobrazíme okno
             document.getElementById('completion-modal').classList.add('active');
+        }
+
+        // FUNKCE PRO ODHALENÍ ODPOVĚDI
+        function revealAnswer() {
+            const tipEl = document.getElementById('extra-tip-text');
+            const btnEl = document.getElementById('reveal-btn');
+            
+            // Skryjeme tlačítko
+            btnEl.style.display = 'none';
+            
+            // Zobrazíme text s odpovědí (přidáme třídu visible, která nastaví opacity na 1)
+            tipEl.classList.add('visible');
         }
 
         function closeModal() {
