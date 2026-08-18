@@ -16,17 +16,53 @@
             -ms-user-select: none;
             user-select: none;
         }
-        h1 { color: #2c3e50; font-size: 36px; margin-bottom: 30px;}
+        h1 { color: #2c3e50; font-size: 36px; margin-bottom: 40px;}
         
         /* Navigace a obrazovky */
         .screen { display: none; }
         .active { display: block; }
         
+        /* Rozložení kategorií na hlavní stránce */
+        .menu-categories {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .category {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 10px solid #ccc;
+            box-sizing: border-box;
+        }
+        .category-cold { border-top-color: #3498db; }
+        .category-warm { border-top-color: #e74c3c; }
+        
+        .category h2 {
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .category-cold h2 { color: #3498db; }
+        .category-warm h2 { color: #e74c3c; }
+
         /* Tlačítka v menu */
         .menu-btn {
             font-size: 24px;
-            padding: 20px 40px;
-            margin: 10px;
+            padding: 20px 30px;
+            margin: 8px 0;
             border: none;
             border-radius: 12px;
             cursor: pointer;
@@ -34,8 +70,9 @@
             font-weight: bold;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: transform 0.1s, background-color 0.2s;
-            width: 80%;
-            max-width: 450px;
+            width: 100%;
+            max-width: 380px;
+            box-sizing: border-box;
         }
         .menu-btn:active { transform: scale(0.98); }
         
@@ -192,14 +229,13 @@
             font-size: 70px; 
             margin-bottom: 10px; 
             color: #f39c12; 
-            cursor: pointer; /* Ikona je nyní klikatelná */
+            cursor: pointer; 
             transition: transform 0.2s;
         }
         .modal-icon:active { transform: scale(0.9); }
         .modal h2 { color: #2c3e50; margin-bottom: 15px; }
         .modal p { font-size: 22px; color: #34495e; margin-bottom: 10px; }
         
-        /* Skrytý text odpovědi */
         .tip { 
             font-size: 22px; 
             color: #2980b9; 
@@ -214,7 +250,6 @@
             opacity: 1;
         }
 
-        /* Tlačítko pro zobrazení odpovědi */
         .reveal-btn {
             background-color: #f39c12;
             color: white;
@@ -242,11 +277,23 @@
     <!-- OBRAZOVKA 1: HLAVNÍ MENU (VÝBĚR JÍDLA) -->
     <div id="screen-menu" class="screen active">
         <h1>Co budeme dnes připravovat?</h1>
-        <button class="menu-btn btn-cold" onclick="showDifficulty('oblozeny_talir')">🥪 Obložený talíř</button>
-        <button class="menu-btn btn-cold" onclick="showDifficulty('vajickova_pomazanka')">🥚 Vajíčková pomazánka</button>
-        <button class="menu-btn btn-cold" onclick="showDifficulty('testovinovy_salat')">🍝 Těstovinový salát</button>
-        <button class="menu-btn btn-warm" onclick="showDifficulty('polevka')">🍲 Polévka</button>
-        <button class="menu-btn btn-warm" onclick="showDifficulty('bolonske_spagety')">🍝 Boloňské špagety</button>
+        
+        <div class="menu-categories">
+            <!-- Studená kuchyně -->
+            <div class="category category-cold">
+                <h2>🧊 Studená kuchyně</h2>
+                <button class="menu-btn btn-cold" onclick="showDifficulty('oblozeny_talir')">🥪 Obložený talíř</button>
+                <button class="menu-btn btn-cold" onclick="showDifficulty('vajickova_pomazanka')">🥚 Vajíčková pomazánka</button>
+                <button class="menu-btn btn-cold" onclick="showDifficulty('testovinovy_salat')">🍝 Těstovinový salát</button>
+            </div>
+            
+            <!-- Teplá kuchyně -->
+            <div class="category category-warm">
+                <h2>🔥 Teplá kuchyně</h2>
+                <button class="menu-btn btn-warm" onclick="showDifficulty('polevka')">🍲 Polévka</button>
+                <button class="menu-btn btn-warm" onclick="showDifficulty('bolonske_spagety')">🍝 Boloňské špagety</button>
+            </div>
+        </div>
     </div>
 
     <!-- OBRAZOVKA 2: VÝBĚR OBTÍŽNOSTI -->
@@ -281,10 +328,8 @@
             <h2>Pokrm je hotový!</h2>
             <p>Co dalšího můžeme do pokrmu přidat?</p>
             
-            <!-- Tlačítko, které po kliknutí zmizí a ukáže odpověď -->
             <button id="reveal-btn" class="reveal-btn" onclick="revealAnswer()">Zobrazit odpověď</button>
             
-            <!-- Skrytá odpověď, která se objeví po kliknutí -->
             <p class="tip" id="extra-tip-text">Tip sem...</p>
             
             <button class="menu-btn btn-back" onclick="closeModal()" style="background-color: #3498db; color: white;">Hrát znovu</button>
@@ -403,7 +448,7 @@
             document.getElementById('screen-difficulty').classList.remove('active');
             document.getElementById('screen-menu').classList.add('active');
             document.getElementById('message').innerText = "";
-            closeModal(); // Zavřít modal, pokud byl otevřen
+            closeModal();
         }
 
         // ZOBRAZENÍ OBTÍŽNOSTI
@@ -441,7 +486,6 @@
             let ingredientsContainer = document.getElementById('ingredients');
             ingredientsContainer.innerHTML = "";
 
-            // Zamíchání surovin
             availableItems.sort(() => Math.random() - 0.5);
 
             availableItems.forEach(item => {
@@ -458,7 +502,7 @@
         // FUNKCE PRO TAŽENÍ
         function startDrag(e) {
             if (e.currentTarget.classList.contains('correct-placed')) return;
-            if (activeDrag) return; // Zabrání uchopení dvou prvků najednou
+            if (activeDrag) return;
 
             activeDrag = e.currentTarget;
             originalParent = activeDrag.parentNode;
@@ -568,26 +612,16 @@
 
         // MODÁLNÍ OKNO S OTÁZKOU
         function showCompletionModal() {
-            // Vyčistíme předchozí stav (skryjeme odpověď, ukážeme tlačítko)
             document.getElementById('extra-tip-text').classList.remove('visible');
             document.getElementById('reveal-btn').style.display = 'inline-block';
-            
-            // Nastavíme text odpovědi do HTML
             document.getElementById('extra-tip-text').innerText = currentLevelInfo.extraTip;
-            
-            // Zobrazíme okno
             document.getElementById('completion-modal').classList.add('active');
         }
 
-        // FUNKCE PRO ODHALENÍ ODPOVĚDI
         function revealAnswer() {
             const tipEl = document.getElementById('extra-tip-text');
             const btnEl = document.getElementById('reveal-btn');
-            
-            // Skryjeme tlačítko
             btnEl.style.display = 'none';
-            
-            // Zobrazíme text s odpovědí (přidáme třídu visible, která nastaví opacity na 1)
             tipEl.classList.add('visible');
         }
 
