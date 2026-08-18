@@ -14,7 +14,7 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
-            user-select: none; /* Zabrání označování textu při tažení na tabletech */
+            user-select: none;
         }
         h1 { color: #2c3e50; font-size: 36px; margin-bottom: 30px;}
         
@@ -24,9 +24,9 @@
         
         /* Tlačítka v menu */
         .menu-btn {
-            font-size: 26px;
-            padding: 25px 40px;
-            margin: 15px;
+            font-size: 24px;
+            padding: 20px 40px;
+            margin: 10px;
             border: none;
             border-radius: 12px;
             cursor: pointer;
@@ -35,11 +35,17 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: transform 0.1s, background-color 0.2s;
             width: 80%;
-            max-width: 400px;
+            max-width: 450px;
         }
         .menu-btn:active { transform: scale(0.98); }
+        
         .btn-cold { background-color: #3498db; }
         .btn-warm { background-color: #e74c3c; }
+        
+        .btn-diff-easy { background-color: #2ecc71; }
+        .btn-diff-medium { background-color: #f39c12; }
+        .btn-diff-hard { background-color: #c0392b; }
+        
         .btn-back { 
             background-color: #7f8c8d; 
             font-size: 18px; 
@@ -50,7 +56,7 @@
         }
 
         .instructions {
-            font-size: 26px;
+            font-size: 24px;
             margin-bottom: 25px;
             color: #34495e;
             font-weight: bold;
@@ -59,10 +65,11 @@
             margin-right: auto;
         }
         
-        /* Herní plocha */
+        /* Herní plocha - Mísový/táčový prostor */
         #drop-zone {
-            width: 280px;
-            height: 280px;
+            width: 95%;
+            max-width: 700px;
+            min-height: 150px;
             border: 5px dashed #95a5a6;
             border-radius: 20px;
             margin: 0 auto 40px auto;
@@ -72,24 +79,29 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
-            padding: 20px;
-            font-size: 120px; /* Velké ikony na pozadí */
-            touch-action: none; /* Důležité pro drag & drop na dotyku */
+            padding: 25px;
+            touch-action: none;
             position: relative;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        
+        #drop-zone.hover {
+            border-color: #3498db;
+            background-color: #ebf5fb;
         }
         
         #drop-zone-icon-bg {
             position: absolute;
-            font-size: 150px;
-            opacity: 0.15;
-            pointer-events: none; /* Ikonu na pozadí nelze chytit myší/prstem */
+            font-size: 100px;
+            opacity: 0.1;
+            pointer-events: none;
             z-index: 0;
         }
 
         .ingredients-container {
             display: flex;
             justify-content: center;
-            gap: 25px;
+            gap: 20px;
             flex-wrap: wrap;
             max-width: 900px;
             margin: 0 auto;
@@ -97,8 +109,8 @@
         }
         
         .ingredient {
-            width: 130px;
-            height: 140px;
+            width: 120px;
+            height: 130px;
             background-color: #fff;
             border: 3px solid #bdc3c7;
             border-radius: 12px;
@@ -106,30 +118,38 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             cursor: grab;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            touch-action: none; /* Zabrání scrollování při tažení suroviny */
+            touch-action: none;
             position: relative;
             z-index: 10;
-            transition: border-color 0.2s, background-color 0.2s;
+            transition: width 0.2s, height 0.2s, border-color 0.2s, background-color 0.2s, transform 0.1s;
         }
-        .ingredient:active { cursor: grabbing; }
+        .ingredient:active { transform: scale(0.95); }
         
-        .ingredient-icon { font-size: 50px; margin-bottom: 5px; pointer-events: none; }
+        .ingredient-icon { font-size: 45px; margin-bottom: 5px; pointer-events: none; }
         .ingredient-name { pointer-events: none; }
         
+        /* Jakmile je surovina správně vložena, zmenší se, aby dělala bordel */
         .ingredient.correct-placed {
+            width: 85px;
+            height: 90px;
             border-color: #2ecc71;
             background-color: #e8f8f5;
             cursor: default;
+            font-size: 13px;
+            transform: scale(1);
+        }
+        .ingredient.correct-placed .ingredient-icon {
+            font-size: 30px;
         }
         
         .ingredient.dragging {
             z-index: 1000;
-            opacity: 0.8;
-            transform: scale(1.05);
+            opacity: 0.9;
+            transform: scale(1.1);
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
@@ -145,30 +165,38 @@
 </head>
 <body>
 
-    <!-- OBRAZOVKA 1: HLAVNÍ MENU -->
+    <!-- OBRAZOVKA 1: HLAVNÍ MENU (VÝBĚR JÍDLLA) -->
     <div id="screen-menu" class="screen active">
         <h1>Co budeme dnes připravovat?</h1>
-        <!-- Tlačítka mají parametr levelID, který odpovídá klíči v objektu levels -->
-        <button class="menu-btn btn-cold" onclick="startLevel('oblozeny_talir')">🥪 Obložený talíř</button>
-        <button class="menu-btn btn-cold" onclick="startLevel('vajickova_pomazanka')">🥚 Vajíčková pomazánka</button>
-        <button class="menu-btn btn-cold" onclick="startLevel('testovinovy_salat')">🍝 Těstovinový salát</button>
-        <button class="menu-btn btn-warm" onclick="startLevel('polevka')">🍲 Polévka</button>
-        <button class="menu-btn btn-warm" onclick="startLevel('bolonske_spagety')">🍝 Boloňské špagety</button>
+        <button class="menu-btn btn-cold" onclick="showDifficulty('oblozeny_talir')">🥪 Obložený talíř</button>
+        <button class="menu-btn btn-cold" onclick="showDifficulty('vajickova_pomazanka')">🥚 Vajíčková pomazánka</button>
+        <button class="menu-btn btn-cold" onclick="showDifficulty('testovinovy_salat')">🍝 Těstovinový salát</button>
+        <button class="menu-btn btn-warm" onclick="showDifficulty('polevka')">🍲 Polévka</button>
+        <button class="menu-btn btn-warm" onclick="showDifficulty('bolonske_spagety')">🍝 Boloňské špagety</button>
     </div>
 
-    <!-- OBRAZOVKA 2: HRA -->
+    <!-- OBRAZOVKA 2: VÝBĚR OBTÍŽNOSTI -->
+    <div id="screen-difficulty" class="screen">
+        <button class="menu-btn btn-back" onclick="showMenu()">← Zpět na jídla</button>
+        <h1 id="diff-title">Vyberte obtížnost</h1>
+        <button class="menu-btn btn-diff-easy" onclick="startLevel(1)">😊 Lehká<br><span style="font-size:16px; font-weight:normal;">Méně surovin</span></button>
+        <button class="menu-btn btn-diff-medium" onclick="startLevel(2)">😐 Střední<br><span style="font-size:16px; font-weight:normal;">Více surovin na výběr</span></button>
+        <button class="menu-btn btn-diff-hard" onclick="startLevel(3)">😤 Těžká<br><span style="font-size:16px; font-weight:normal;">Včetně chytáků</span></button>
+    </div>
+
+    <!-- OBRAZOVKA 3: HRA -->
     <div id="screen-game" class="screen">
         <button class="menu-btn btn-back" onclick="showMenu()">← Zpět do menu</button>
         
         <h1 id="level-title">Název jídla</h1>
         <div class="instructions" id="level-instructions">Instrukce...</div>
 
-        <!-- Místo kam se hází (Talíř nebo Hrnec) -->
+        <!-- Prostor kam se hází suroviny -->
         <div id="drop-zone">
             <div id="drop-zone-icon-bg">🍲</div>
         </div>
 
-        <!-- Zde se vygenerují suroviny pro daný level -->
+        <!-- Suroviny -->
         <div class="ingredients-container" id="ingredients"></div>
 
         <div id="message"></div>
@@ -176,20 +204,23 @@
 
     <script>
         // DATABÁZE ÚROVNÍ 
-        // Vlastnost "icon" může v budoucnu nahrazena tagem <img src="url-obrazku.jpg">
+        // diff 1 = Lehká, diff 2 = Střední, diff 3 = Těžká
         const levels = {
             oblozeny_talir: {
                 title: "Obložený talíř",
                 instructions: "Přetáhni na talíř to, co na něj patří.",
                 dropZoneIcon: "🍽️",
                 items: [
-                    { id: "sunka_ot", name: "Šunka", icon: "🍖", correct: true },
-                    { id: "vejce_ot", name: "Vejce", icon: "🥚", correct: true },
-                    { id: "syr_ot", name: "Sýr", icon: "🧀", correct: true },
-                    { id: "rajce_ot", name: "Rajče", icon: "🍅", correct: true },
-                    { id: "okurka_ot", name: "Kyselá okurka", icon: "🥒", correct: true },
-                    { id: "cesnek_ot", name: "Česnek", icon: "🧄", correct: false },
-                    { id: "cibule_ot", name: "Cibule", icon: "🧅", correct: false }
+                    { id: "sunka_ot", name: "Šunka", icon: "🍖", correct: true, diff: 1 },
+                    { id: "vejce_ot", name: "Vejce", icon: "🥚", correct: true, diff: 1 },
+                    { id: "syr_ot", name: "Sýr", icon: "🧀", correct: true, diff: 1 },
+                    { id: "cibule_ot", name: "Cibule", icon: "🧅", correct: false, diff: 1 },
+                    
+                    { id: "rajce_ot", name: "Rajče", icon: "🍅", correct: true, diff: 2 },
+                    { id: "okurka_ot", name: "Kyselá okurka", icon: "🥒", correct: true, diff: 2 },
+                    { id: "cesnek_ot", name: "Česnek", icon: "🧄", correct: false, diff: 2 },
+                    
+                    { id: "zmrzlina_ot", name: "Zmrzlina", icon: "🍦", correct: false, diff: 3 }
                 ]
             },
             vajickova_pomazanka: {
@@ -197,12 +228,15 @@
                 instructions: "Přetáhni do mísy to, z čeho se pomazánka dělá.",
                 dropZoneIcon: "🥣",
                 items: [
-                    { id: "vejce_vp", name: "Vejce", icon: "🥚", correct: true },
-                    { id: "sol_vp", name: "Sůl", icon: "🧂", correct: true },
-                    { id: "maslo_vp", name: "Pomazánkové máslo", icon: "🧈", correct: true },
-                    { id: "horcice_vp", name: "Hořčice", icon: "🟡", correct: true },
-                    { id: "brambor_vp", name: "Brambor", icon: "🥔", correct: false },
-                    { id: "ryby_vp", name: "Ryby", icon: "🐟", correct: false }
+                    { id: "vejce_vp", name: "Vejce", icon: "🥚", correct: true, diff: 1 },
+                    { id: "sol_vp", name: "Sůl", icon: "🧂", correct: true, diff: 1 },
+                    { id: "maslo_vp", name: "Pomaz. máslo", icon: "🧈", correct: true, diff: 1 },
+                    { id: "brambor_vp", name: "Brambor", icon: "🥔", correct: false, diff: 1 },
+                    
+                    { id: "horcice_vp", name: "Hořčice", icon: "🟡", correct: true, diff: 2 },
+                    { id: "ryby_vp", name: "Ryby", icon: "🐟", correct: false, diff: 2 },
+                    
+                    { id: "cokolada_vp", name: "Čokoláda", icon: "🍫", correct: false, diff: 3 }
                 ]
             },
             testovinovy_salat: {
@@ -210,13 +244,16 @@
                 instructions: "Přetáhni do mísy to, co do salátu patří.",
                 dropZoneIcon: "🥗",
                 items: [
-                    { id: "testoviny_ts", name: "Těstoviny", icon: "🍝", correct: true },
-                    { id: "kure_ts", name: "Kuřecí maso", icon: "🍗", correct: true },
-                    { id: "sunka_ts", name: "Šunka", icon: "🍖", correct: true },
-                    { id: "syr_ts", name: "Sýr", icon: "🧀", correct: true },
-                    { id: "okurek_ts", name: "Okurek", icon: "🥒", correct: true },
-                    { id: "fazole_ts", name: "Fazole", icon: "🫘", correct: false },
-                    { id: "jogurt_ts", name: "Jogurt ovocný", icon: "🥭", correct: false }
+                    { id: "testoviny_ts", name: "Těstoviny", icon: "🍝", correct: true, diff: 1 },
+                    { id: "sunka_ts", name: "Šunka", icon: "🍖", correct: true, diff: 1 },
+                    { id: "syr_ts", name: "Sýr", icon: "🧀", correct: true, diff: 1 },
+                    { id: "fazole_ts", name: "Fazole", icon: "🫘", correct: false, diff: 1 },
+                    
+                    { id: "kure_ts", name: "Kuřecí maso", icon: "🍗", correct: true, diff: 2 },
+                    { id: "okurek_ts", name: "Okurek", icon: "🥒", correct: true, diff: 2 },
+                    { id: "jogurt_ts", name: "Ovocný jogurt", icon: "🥭", correct: false, diff: 2 },
+                    
+                    { id: "banan_ts", name: "Banán", icon: "🍌", correct: false, diff: 3 }
                 ]
             },
             polevka: {
@@ -224,13 +261,16 @@
                 instructions: "Přetáhni do hrnce to, z čeho se vaří polévka.",
                 dropZoneIcon: "🍲",
                 items: [
-                    { id: "brokolice_p", name: "Brokolice", icon: "🥦", correct: true },
-                    { id: "cocka_p", name: "Čočka", icon: "🟫", correct: true },
-                    { id: "brambor_p", name: "Brambor", icon: "🥔", correct: true },
-                    { id: "fazole_p", name: "Fazole", icon: "🫘", correct: true },
-                    { id: "mrkev_p", name: "Mrkev", icon: "🥕", correct: true },
-                    { id: "meloun_p", name: "Meloun", icon: "🍉", correct: false },
-                    { id: "mandarinka_p", name: "Mandarinka", icon: "🍊", correct: false }
+                    { id: "brambor_p", name: "Brambor", icon: "🥔", correct: true, diff: 1 },
+                    { id: "mrkev_p", name: "Mrkev", icon: "🥕", correct: true, diff: 1 },
+                    { id: "voda_p", name: "Voda", icon: "💧", correct: true, diff: 1 },
+                    { id: "meloun_p", name: "Meloun", icon: "🍉", correct: false, diff: 1 },
+                    
+                    { id: "brokolice_p", name: "Brokolice", icon: "🥦", correct: true, diff: 2 },
+                    { id: "cocka_p", name: "Čočka", icon: "🟫", correct: true, diff: 2 },
+                    { id: "mandarinka_p", name: "Mandarinka", icon: "🍊", correct: false, diff: 2 },
+                    
+                    { id: "zmrzlina_p", name: "Zmrzlina", icon: "🍦", correct: false, diff: 3 }
                 ]
             },
             bolonske_spagety: {
@@ -238,43 +278,58 @@
                 instructions: "Přetáhni do hrnce to, co patří do boloňské omáčky.",
                 dropZoneIcon: "🍝",
                 items: [
-                    { id: "spagety_bs", name: "Špagety", icon: "🍝", correct: true },
-                    { id: "rajce_bs", name: "Rajčatový protlak", icon: "🍅", correct: true },
-                    { id: "cesnek_bs", name: "Česnek", icon: "🧄", correct: true },
-                    { id: "mrkev_bs", name: "Mrkev", icon: "🥕", correct: true },
-                    { id: "mlete_maso_bs", name: "Mleté maso", icon: "🥩", correct: true },
-                    { id: "kureci_maso_bs", name: "Kuřecí maso", icon: "🍗", correct: false },
-                    { id: "cokolada_bs", name: "Čokoláda", icon: "🍫", correct: false }
+                    { id: "spagety_bs", name: "Špagety", icon: "🍝", correct: true, diff: 1 },
+                    { id: "rajce_bs", name: "Rajčatový protlak", icon: "🍅", correct: true, diff: 1 },
+                    { id: "mlete_maso_bs", name: "Mleté maso", icon: "🥩", correct: true, diff: 1 },
+                    { id: "cokolada_bs", name: "Čokoláda", icon: "🍫", correct: false, diff: 1 },
+                    
+                    { id: "cesnek_bs", name: "Česnek", icon: "🧄", correct: true, diff: 2 },
+                    { id: "mrkev_bs", name: "Mrkev", icon: "🥕", correct: true, diff: 2 },
+                    { id: "kureci_maso_bs", name: "Kuřecí maso", icon: "🍗", correct: false, diff: 2 },
+                    
+                    { id: "ananas_bs", name: "Ananas", icon: "🍍", correct: false, diff: 3 }
                 ]
             }
         };
 
+        let currentDishId = null;
         let currentLevelInfo = null;
         let correctItemsPlaced = 0;
         let totalCorrectItems = 0;
 
-        // Logika pro tažení (Pointer Events - podporuje dotek i myš)
+        // Logika pro tažení
         let activeDrag = null;
-        let initialX = 0, initialY = 0;
         let offsetX = 0, offsetY = 0;
         let originalParent = null;
         let originalNextSibling = null;
 
-        // ZOBRAZENÍ MENU
+        // ZOBRAZENÍ HLAVNÍHO MENU
         function showMenu() {
             document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-difficulty').classList.remove('active');
             document.getElementById('screen-menu').classList.add('active');
-            // Vyčistíme zprávy
             document.getElementById('message').innerText = "";
         }
 
-        // START ÚROVNĚ
-        function startLevel(levelId) {
-            currentLevelInfo = levels[levelId];
-            correctItemsPlaced = 0;
-            totalCorrectItems = currentLevelInfo.items.filter(item => item.correct).length;
-
+        // ZOBRAZENÍ OBTÍŽNOSTI
+        function showDifficulty(dishId) {
+            currentDishId = dishId;
             document.getElementById('screen-menu').classList.remove('active');
+            document.getElementById('screen-difficulty').classList.add('active');
+            document.getElementById('diff-title').innerText = levels[dishId].title + ": Vyberte obtížnost";
+        }
+
+        // START ÚROVNĚ
+        function startLevel(difficulty) {
+            currentLevelInfo = levels[currentDishId];
+            
+            // Vyfiltrujeme suroviny podle zvolené obtížnosti
+            let availableItems = currentLevelInfo.items.filter(item => item.diff <= difficulty);
+            
+            correctItemsPlaced = 0;
+            totalCorrectItems = availableItems.filter(item => item.correct).length;
+
+            document.getElementById('screen-difficulty').classList.remove('active');
             document.getElementById('screen-game').classList.add('active');
 
             document.getElementById('level-title').innerText = currentLevelInfo.title;
@@ -284,8 +339,9 @@
             let dropZone = document.getElementById('drop-zone');
             let dropZoneIcon = document.getElementById('drop-zone-icon-bg');
             dropZoneIcon.innerText = currentLevelInfo.dropZoneIcon;
+            dropZone.classList.remove('hover');
             
-            // Při startu vyčistíme drop-zone (kromě ikony na pozadí)
+            // Vyčistíme drop-zone (kromě ikony na pozadí)
             Array.from(dropZone.children).forEach(child => {
                 if (child.id !== 'drop-zone-icon-bg') {
                     dropZone.removeChild(child);
@@ -295,24 +351,22 @@
             let ingredientsContainer = document.getElementById('ingredients');
             ingredientsContainer.innerHTML = "";
 
-            currentLevelInfo.items.forEach(item => {
+            // Zamíchání surovin, aby nebyly vždy stejně pod sebou
+            availableItems.sort(() => Math.random() - 0.5);
+
+            availableItems.forEach(item => {
                 let div = document.createElement('div');
                 div.className = "ingredient";
                 div.id = item.id;
                 div.setAttribute("data-correct", item.correct);
-                
-                // Přidání posluchače událostí pro tažení
                 div.addEventListener('pointerdown', startDrag);
-                
-                // Struktura pro ikonu a text (lze nahradit <img>)
                 div.innerHTML = `<div class="ingredient-icon">${item.icon}</div><div class="ingredient-name">${item.name}</div>`;
                 ingredientsContainer.appendChild(div);
             });
         }
 
-        // FUNKCE PRO TAŽENÍ (DRAG & DROP S POINTER EVENTS)
+        // FUNKCE PRO TAŽENÍ
         function startDrag(e) {
-            // Pokud už byla surovina správně položena, nelze s ní hýbat
             if (e.currentTarget.classList.contains('correct-placed')) return;
 
             activeDrag = e.currentTarget;
@@ -320,12 +374,9 @@
             originalNextSibling = activeDrag.nextSibling;
 
             const rect = activeDrag.getBoundingClientRect();
-            
-            // Výpočet pozice, aby prst/myš byl v místě, kde jsme prvek uchopili
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
 
-            // Přesuneme do body, aby se mohl volně pohybovat nad všemi elementy
             document.body.appendChild(activeDrag);
             activeDrag.style.position = 'fixed';
             activeDrag.style.left = rect.left + 'px';
@@ -340,20 +391,26 @@
 
         function moveDrag(e) {
             if (!activeDrag) return;
-            e.preventDefault(); // Zabrání scrollování okna na dotykových zařízeních
+            e.preventDefault(); 
             
             activeDrag.style.left = (e.clientX - offsetX) + 'px';
             activeDrag.style.top = (e.clientY - offsetY) + 'px';
+            
+            // Zvýraznění Drop zóny při najetí
+            const dropZone = document.getElementById('drop-zone');
+            const dropRect = dropZone.getBoundingClientRect();
+            const isInside = e.clientX >= dropRect.left && e.clientX <= dropRect.right && e.clientY >= dropRect.top && e.clientY <= dropRect.bottom;
+            dropZone.classList.toggle('hover', isInside);
         }
 
         function endDrag(e) {
             if (!activeDrag) return;
-
+            
             const dropZone = document.getElementById('drop-zone');
+            dropZone.classList.remove('hover');
             const dropRect = dropZone.getBoundingClientRect();
             const messageEl = document.getElementById("message");
 
-            // Detekce, zda je surovina puštěna uvnitř drop zóny
             const isInsideDropZone = (
                 e.clientX >= dropRect.left && 
                 e.clientX <= dropRect.right && 
@@ -364,12 +421,11 @@
             let isCorrect = activeDrag.getAttribute("data-correct") === "true";
 
             if (isInsideDropZone && isCorrect) {
-                // SPRÁVNĚ: Umístíme trvale do dropzone a upravíme styl
+                // SPRÁVNĚ
                 dropZone.appendChild(activeDrag);
                 activeDrag.classList.remove('dragging');
-                activeDrag.classList.add('correct-placed');
+                activeDrag.classList.add('correct-placed'); // Zde se aplikuje zmenšení
                 
-                // Vyčistíme inline styly, aby se prvek přizpůsobil flexboxu v dropzone
                 activeDrag.style.position = '';
                 activeDrag.style.left = '';
                 activeDrag.style.top = '';
@@ -384,36 +440,28 @@
                     messageEl.innerText = "Skvělá práce! Pokrm je hotový! 👏";
                 }
             } else {
-                // ŠPATNĚ NEBO MIMO: Vrátíme na původní místo s plynulou animací zpět
+                // ŠPATNĚ NEBO MIMO
                 messageEl.style.color = "#e74c3c";
                 if (isInsideDropZone) {
                     messageEl.innerText = "Pozor, toto do jídla nepatří.";
                 } else {
-                    messageEl.innerText = ""; // Pokud to jen hodí vedle, nebudeme ho kárat
+                    messageEl.innerText = "";
                 }
 
-                // Animace vrácení
                 activeDrag.style.transition = 'left 0.2s ease, top 0.2s ease';
-                
-                // Získání původní pozice pro animaci
                 if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
                     originalParent.insertBefore(activeDrag, originalNextSibling);
                 } else {
                     originalParent.appendChild(activeDrag);
                 }
 
-                // Musíme nastavit výchozí souřadnice pro animaci a pak odstranit
                 const newRect = activeDrag.getBoundingClientRect();
                 activeDrag.style.left = newRect.left + 'px';
                 activeDrag.style.top = newRect.top + 'px';
-                
-                // Force reflow
                 activeDrag.offsetHeight; 
-                
                 activeDrag.style.left = '';
                 activeDrag.style.top = '';
                 
-                // Po dokončení animace odstraníme transitions a fixed position
                 setTimeout(() => {
                     if (!activeDrag) return;
                     activeDrag.classList.remove('dragging');
@@ -424,7 +472,6 @@
                 }, 200);
             }
 
-            // Úklid posluchačů a reset proměnných
             document.removeEventListener('pointermove', moveDrag);
             document.removeEventListener('pointerup', endDrag);
             activeDrag = null;
