@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Učíme se vařit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #333; font-size: 32px; }
+        
+        /* Navigace a obrazovky */
+        .screen { display: none; }
+        .active { display: block; }
+        
+        /* Tlačítka v menu */
+        .menu-btn {
+            font-size: 24px;
+            padding: 20px 40px;
+            margin: 20px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-warm { background-color: #ff6b6b; }
+        .btn-cold { background-color: #4dabf7; }
+        .btn-back { background-color: #888; font-size: 18px; padding: 10px 20px; margin-bottom: 20px; }
+
+        .instructions {
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #0056b3;
+            font-weight: bold;
+        }
+        
+        /* Herní plocha */
+        #drop-zone {
+            width: 300px;
+            height: 300px;
+            border: 6px dashed #ccc;
+            border-radius: 50%;
+            margin: 0 auto 30px auto;
+            background-color: white;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-size: 80px; /* pro zobrazení emoji hrnce/talíře na pozadí */
+        }
+        
+        .ingredients-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .ingredient {
+            width: 120px;
+            height: 120px;
+            background-color: #fff;
+            border: 3px solid #999;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            touch-action: none; /* Lepší pro budoucí dotykové obrazovky */
+        }
+        .ingredient span { font-size: 40px; } /* Velikost ikony/smajlíku */
+        
+        #message {
+            font-size: 30px;
+            margin-top: 25px;
+            font-weight: bold;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- OBRAZOVKA 1: HLAVNÍ MENU -->
+    <div id="screen-menu" class="screen active">
+        <h1>Co budeme dnes připravovat?</h1>
+        <button class="menu-btn btn-warm" onclick="startLevel('warm')">🍲 Teplý pokrm</button>
+        <button class="menu-btn btn-cold" onclick="startLevel('cold')">🥪 Studený pokrm</button>
+    </div>
+
+    <!-- OBRAZOVKA 2: HRA -->
+    <div id="screen-game" class="screen">
+        <button class="menu-btn btn-back" onclick="showMenu()">Zpět do menu</button>
+        
+        <h1 id="level-title">Název jídla</h1>
+        <div class="instructions" id="level-instructions">Instrukce...</div>
+
+        <!-- Místo kam se hází (Talíř nebo Hrnec) -->
+        <div id="drop-zone" ondragover="allowDrop(event)" ondrop="drop(event)">
+            <!-- Zde se budou objevovat suroviny -->
+        </div>
+
+        <!-- Zde se vygenerují suroviny pro daný level -->
+        <div class="ingredients-container" id="ingredients"></div>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // DATABÁZE ÚROVNÍ (Zde můžeš v budoucnu přidávat další jídla)
+        const levels = {
+            warm: {
+                title: "Teplý pokrm: Zeleninová polévka",
+                instructions: "Přetáhni do hrnce to, z čeho se vaří polévka.",
+                dropZoneIcon: "🍲",
+                items: [
+                    { id: "mrkev", name: "Mrkev", icon: "🥕", correct: true },
+                    { id: "brambor", name: "Brambora", icon: "🥔", correct: true },
+                    { id: "voda", name: "Voda", icon: "💧", correct: true },
+                    { id: "cokolada", name: "Čokoláda", icon: "🍫", correct: false },
+                    { id: "hruska", name: "Hruška", icon: "🍐", correct: false }
+                ]
+            },
+            cold: {
+                title: "Studený pokrm: Chléb se šunkou",
+                instructions: "Přetáhni na talíř to, co patří na chleba.",
+                dropZoneIcon: "🍽️",
+                items: [
+                    { id: "chleb", name: "Chléb", icon: "🍞", correct: true },
+                    { id: "sunka", name: "Šunka", icon: "🍖", correct: true },
+                    { id: "syr", name: "Sýr", icon: "🧀", correct: true },
+                    { id: "syrove-maso", name: "Syrové maso", icon: "🥩", correct: false },
+                    { id: "zmrzlina", name: "Zmrzlina", icon: "🍦", correct: false }
+                ]
+            }
+        };
+
+        let currentLevelInfo = null;
+        let correctItemsPlaced = 0;
+        let totalCorrectItems = 0;
+
+        // FUNKCE PRO ZOBRAZENÍ MENU
+        function showMenu() {
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-menu').classList.add('active');
+        }
+
+        // FUNKCE PRO START ÚROVNĚ
+        function startLevel(levelType) {
+            currentLevelInfo = levels[levelType];
+            correctItemsPlaced = 0;
+            totalCorrectItems = currentLevelInfo.items.filter(item => item.correct).length;
+
+            // Změna obrazovek
+            document.getElementById('screen-menu').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+
+            // Nastavení textů
+            document.getElementById('level-title').innerText = currentLevelInfo.title;
+            document.getElementById('level-instructions').innerText = currentLevelInfo.instructions;
+            document.getElementById('message').innerText = "";
+            
+            // Vyčištění talíře/hrnce
+            let dropZone = document.getElementById('drop-zone');
+            dropZone.innerHTML = "";
+            
+            // Vygenerování surovin
+            let ingredientsContainer = document.getElementById('ingredients');
+            ingredientsContainer.innerHTML = "";
+
+            currentLevelInfo.items.forEach(item => {
+                // Zde se tvoří jednotlivé kartičky se surovinami
+                let div = document.createElement('div');
+                div.className = "ingredient";
+                div.draggable = true;
+                div.id = item.id;
+                div.setAttribute("data-correct", item.correct);
+                div.ondragstart = drag;
+                
+                // Vložení ikony a názvu (Pro použití reálných fotek by se sem vkládal <img src="...">)
+                div.innerHTML = `<span>${item.icon}</span> ${item.name}`;
+                ingredientsContainer.appendChild(div);
+            });
+        }
+
+        // LOGIKA PRO TAŽENÍ A PUŠTĚNÍ (DRAG & DROP)
+        function allowDrop(ev) {
+            ev.preventDefault(); // Nutné pro povolení vložení
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            let data = ev.dataTransfer.getData("text");
+            let draggedElement = document.getElementById(data);
+            
+            if (!draggedElement) return;
+
+            let isCorrect = draggedElement.getAttribute("data-correct") === "true";
+            let messageEl = document.getElementById("message");
+
+            if (isCorrect) {
+                // Správná volba - přesune se na talíř
+                document.getElementById('drop-zone').appendChild(draggedElement);
+                draggedElement.draggable = false;
+                draggedElement.style.cursor = "default";
+                draggedElement.style.borderColor = "#4caf50";
+                draggedElement.style.backgroundColor = "#e6ffe6";
+                
+                messageEl.style.color = "green";
+                messageEl.innerText = "Výborně! To tam patří.";
+                correctItemsPlaced++;
+
+                // Kontrola, zda jsou všechny správné suroviny na místě
+                if (correctItemsPlaced === totalCorrectItems) {
+                    messageEl.innerText = "Skvělá práce! Pokrm je hotový!";
+                }
+            } else {
+                // Špatná volba - vrátí se a napíše chybu
+                messageEl.style.color = "red";
+                messageEl.innerText = "Pozor, toto do jídla nepatří.";
+            }
+        }
+    </script>
+</body>
+</html>
